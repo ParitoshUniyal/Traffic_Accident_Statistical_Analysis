@@ -21,7 +21,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Title
-st.title("🚗 Traffic Accident Analysis Dashboard")
+st.title("Traffic Accident Analysis Dashboard")
 
 # Load data
 df = pd.read_csv("../data/cleaned_accidents.csv")
@@ -150,7 +150,6 @@ with col4:
     plt.xticks(rotation=25, fontsize=8)
     plt.tight_layout()
     st.pyplot(fig)
-
 with col5:
     fig, ax = plt.subplots(figsize=FIG_SIZE)
 
@@ -167,10 +166,19 @@ with col5:
     )
 
     # donut hole
-    centre_circle = plt.Circle((0,0), 0.70, fc='#0E1117')
-    fig.gca().add_artist(centre_circle)
+    # centre_circle = plt.Circle((0,0), 0.70, fc='#0E1117')
+    # fig.gca().add_artist(centre_circle)
 
     ax.set_title("Driver Gender", fontsize=10, color='white')
+
+    ax.legend(
+        wedges,
+        gender_counts.index,
+        title="Gender",
+        loc="center left",
+        bbox_to_anchor=(1, 0.5),
+        labelcolor='white'
+    )
 
     for text in autotexts:
         text.set_color('white')
@@ -194,10 +202,19 @@ with col6:
     )
 
     # donut hole
-    centre_circle = plt.Circle((0,0), 0.70, fc='#0E1117')
-    fig.gca().add_artist(centre_circle)
+    # centre_circle = plt.Circle((0,0), 0.70, fc='#0E1117')
+    # fig.gca().add_artist(centre_circle)
 
     ax.set_title("Alcohol Involvement", fontsize=10, color='white')
+
+    ax.legend(
+        wedges,
+        alcohol_counts.index,
+        title="Alcohol",
+        loc="center left",
+        bbox_to_anchor=(1, 0.5),
+        labelcolor='white'
+    )
 
     for text in autotexts:
         text.set_color('white')
