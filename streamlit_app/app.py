@@ -50,6 +50,9 @@ FIG_SIZE = (4, 2.5)
 
 col1, col2 = st.columns(2)
 col3, col4 = st.columns(2)
+st.subheader("Additional Insights")
+
+col5, col6 = st.columns(2)
 
 # Chart 1: Severity
 with col1:
@@ -145,5 +148,59 @@ with col4:
     for spine in ax.spines.values():
         spine.set_visible(False)
     plt.xticks(rotation=25, fontsize=8)
+    plt.tight_layout()
+    st.pyplot(fig)
+
+with col5:
+    fig, ax = plt.subplots(figsize=FIG_SIZE)
+
+    fig.patch.set_facecolor('#0E1117')
+    ax.set_facecolor('#0E1117')
+
+    gender_counts = filtered_df['driver_gender'].value_counts()
+
+    wedges, texts, autotexts = ax.pie(
+        gender_counts,
+        autopct='%1.0f%%',
+        startangle=90,
+        colors=sns.color_palette("pastel")
+    )
+
+    # donut hole
+    centre_circle = plt.Circle((0,0), 0.70, fc='#0E1117')
+    fig.gca().add_artist(centre_circle)
+
+    ax.set_title("Driver Gender", fontsize=10, color='white')
+
+    for text in autotexts:
+        text.set_color('white')
+
+    plt.tight_layout()
+    st.pyplot(fig)
+
+with col6:
+    fig, ax = plt.subplots(figsize=FIG_SIZE)
+
+    fig.patch.set_facecolor('#0E1117')
+    ax.set_facecolor('#0E1117')
+
+    alcohol_counts = filtered_df['alcohol_involvement'].value_counts()
+
+    wedges, texts, autotexts = ax.pie(
+        alcohol_counts,
+        autopct='%1.0f%%',
+        startangle=90,
+        colors=sns.color_palette("coolwarm")
+    )
+
+    # donut hole
+    centre_circle = plt.Circle((0,0), 0.70, fc='#0E1117')
+    fig.gca().add_artist(centre_circle)
+
+    ax.set_title("Alcohol Involvement", fontsize=10, color='white')
+
+    for text in autotexts:
+        text.set_color('white')
+
     plt.tight_layout()
     st.pyplot(fig)
