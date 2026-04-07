@@ -11,11 +11,18 @@ sns.set_style("dark")
 # Page config
 st.set_page_config(page_title="Traffic Accident Dashboard", layout="wide")
 
+# Added the white frame and rounded corners targeting Streamlit images
 st.markdown("""
     <style>
     .block-container {
         padding-top: 1rem;
         padding-bottom: 0rem;
+    }
+    /* Photo frame effect for all matplotlib graphs */
+    [data-testid="stImage"] img {
+        border: 2px solid white !important;
+        border-radius: 15px !important;
+        padding: 5px !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -26,13 +33,12 @@ st.title("Traffic Accident Analysis Dashboard")
 # Load data
 df = pd.read_csv("../data/cleaned_accidents.csv")
 
-# Sidebar filter FIRST
-st.sidebar.header("Filters")
+# --- Sidebar Setup ---
+st.sidebar.header("🎯 Control Panel")
 
+# State Selection
 states = ["All"] + sorted(df['state_name'].unique())
-
 selected_state = st.sidebar.selectbox("Select State", states)
-
 
 # Filter logic
 if selected_state == "All":
@@ -40,35 +46,58 @@ if selected_state == "All":
 else:
     filtered_df = df[df['state_name'] == selected_state]
 
-st.sidebar.markdown("### 🧠 Insights")
+st.sidebar.markdown("---")
+st.sidebar.subheader("📌 Quick Stats")
 
-# Most accident-prone time
+# Calculations
 top_time = filtered_df['time_of_day'].mode()[0]
-
-# Most common weather
 top_weather = filtered_df['weather_conditions'].mode()[0]
+danger_road = filtered_df.groupby('road_condition')['number_of_fatalities'].sum().idxmax()
+alcohol_counts = filtered_df['alcohol_involvement'].value_counts(normalize=True)
+alcohol_pct = alcohol_counts.get('Yes', 0) * 100
 
-# Most dangerous road condition (based on fatalities)
-danger_road = (
-    filtered_df.groupby('road_condition')['number_of_fatalities']
-    .sum()
-    .idxmax()
-)
+# --- Beautiful Sidebar Insights ---
 
-# Alcohol involvement %
-alcohol_pct = (
-    filtered_df['alcohol_involvement']
-    .value_counts(normalize=True)
-    .get('Yes', 0) * 100
-)
+# 1. Peak Time Metric (Native Streamlit Metric)
+st.sidebar.metric(label="Peak Accident Time", value=top_time)
 
+# 2. Alcohol Involvement (Styled with a warning color)
 st.sidebar.markdown(f"""
-- 🚗 Most accidents occur during **{top_time}**
-- 🌦️ Common weather condition: **{top_weather}**
-- 🛣️ Highest fatalities on **{danger_road}** roads
-- 🍺 Alcohol involved in **{alcohol_pct:.0f}%** of cases
-""")
+    <div style="background-color: rgba(255, 75, 75, 0.1); 
+                padding: 15px; 
+                border-left: 5px solid #FF4B4B; 
+                border-radius: 5px; 
+                margin-bottom: 10px;">
+        <span style="color: #FF4B4B; font-weight: bold; font-size: 14px;">⚠️ ALCOHOL FACTOR</span><br>
+        <span style="font-size: 22px; font-weight: bold; color: white;">{alcohol_pct:.1f}%</span>
+        <p style="font-size: 12px; margin: 0; color: #808495;">of accidents involved alcohol</p>
+    </div>
+""", unsafe_allow_html=True)
 
+# 3. Weather Insight (Sleek Blue Card)
+st.sidebar.markdown(f"""
+    <div style="background-color: rgba(0, 173, 181, 0.1); 
+                padding: 15px; 
+                border-left: 5px solid #00ADB5; 
+                border-radius: 5px; 
+                margin-bottom: 10px;">
+        <span style="color: #00ADB5; font-weight: bold; font-size: 14px;">🌦️ PRIMARY WEATHER</span><br>
+        <span style="font-size: 18px; font-weight: bold; color: white;">{top_weather}</span>
+    </div>
+""", unsafe_allow_html=True)
+
+# 4. Road Condition (Simple Highlight)
+st.sidebar.markdown(f"""
+    <div style="background-color: rgba(157, 78, 221, 0.1); 
+                padding: 15px; 
+                border-left: 5px solid #9D4EDD; 
+                border-radius: 5px;">
+        <span style="color: #9D4EDD; font-weight: bold; font-size: 14px;">🛣️ HIGH RISK ROAD</span><br>
+        <span style="font-size: 16px; font-weight: bold; color: white;">{danger_road} Surfaces</span>
+    </div>
+""", unsafe_allow_html=True)
+
+st.sidebar.markdown("---")
 
 # Dataset preview
 # st.subheader("Dataset Preview")
@@ -79,61 +108,55 @@ st.subheader("Key Insights")
 
 colA, colB, colC, colD = st.columns(4)
 
-# Card 1: Total Accidents
-with colA:
-    st.markdown(f"""
+# Re-calculating values for the cards
+total_accidents = len(filtered_df)
+avg_casualties = filtered_df['number_of_casualties'].mean()
+alcohol_pct = (filtered_df['alcohol_involvement'].value_counts(normalize=True).get('Yes', 0)) * 100
+common_severity = filtered_df['accident_severity'].mode()[0]
+
+# Helper function for the "Beautiful" Card
+def draw_key_card(column, label, value, color, icon):
+    column.markdown(f"""
     <div style="
-        background-color:#161B22;
-        padding:15px;
-        border-radius:10px;
-        text-align:center;">
-        <h3 style="color:white;">Total Accidents</h3>
-        <h2 style="color:#00ADB5;">{len(filtered_df)}</h2>
+        background: rgba(22, 27, 34, 0.5);
+        padding: 24px;
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        text-align: left;
+        position: relative;
+        overflow: hidden;
+        min-height: 140px;
+    ">
+        <div style="
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 4px; 
+            height: 100%; 
+            background-color: {color};
+        "></div>
+        <p style="color: #8B949E; font-size: 12px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">{icon} {label}</p>
+        <h2 style="color: white; margin: 10px 0 0 0; font-size: 32px; font-weight: 700;">{value}</h2>
+        <p style="color: {color}; font-size: 12px; margin: 5px 0 0 0; font-weight: 600;">Active Filter Data</p>
     </div>
     """, unsafe_allow_html=True)
+
+# Card 1: Total Accidents
+with colA:
+    draw_key_card(colA, "Total Incidents", f"{total_accidents:,}", "#00ADB5", "📉")
 
 # Card 2: Avg Casualties
 with colB:
-    avg_casualties = filtered_df['number_of_casualties'].mean()
-    st.markdown(f"""
-    <div style="
-        background-color:#161B22;
-        padding:15px;
-        border-radius:10px;
-        text-align:center;">
-        <h3 style="color:white;">Avg Casualties</h3>
-        <h2 style="color:#F8B400;">{avg_casualties:.1f}</h2>
-    </div>
-    """, unsafe_allow_html=True)
+    draw_key_card(colB, "Avg Casualties", f"{avg_casualties:.2f}", "#F8B400", "🚑")
 
-# Card 3: Alcohol Involvement %
+# Card 3: Alcohol Involvement
 with colC:
-    alcohol_pct = (filtered_df['alcohol_involvement'].value_counts(normalize=True).get('Yes', 0)) * 100
-    st.markdown(f"""
-    <div style="
-        background-color:#161B22;
-        padding:15px;
-        border-radius:10px;
-        text-align:center;">
-        <h3 style="color:white;">Alcohol Cases</h3>
-        <h2 style="color:#FF6363;">{alcohol_pct:.0f}%</h2>
-    </div>
-    """, unsafe_allow_html=True)
+    draw_key_card(colC, "Alcohol Cases", f"{alcohol_pct:.1f}%", "#FF6363", "🍺")
 
-# Card 4: Most Common Severity
+# Card 4: Main Severity
 with colD:
-    common_severity = filtered_df['accident_severity'].mode()[0]
-    st.markdown(f"""
-    <div style="
-        background-color:#161B22;
-        padding:15px;
-        border-radius:10px;
-        text-align:center;">
-        <h3 style="color:white;">Top Severity</h3>
-        <h2 style="color:#9D4EDD;">{common_severity}</h2>
-    </div>
-    """, unsafe_allow_html=True)
-
+    draw_key_card(colD, "Top Severity", common_severity, "#9D4EDD", "⚠️")
 # Section title
 st.subheader(f"Analysis for {selected_state}")
 
