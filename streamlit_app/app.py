@@ -2,6 +2,25 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
+# st.write("Files Streamlit sees:", os.listdir("pages") if os.path.exists("pages") else "Pages folder not found")
+
+@st.cache_data
+def load_data():
+    # This finds the directory where the current file is, then goes up to the project root
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    # Adjusting path to get to the 'data' folder from 'streamlit_app' or 'pages'
+    # If in app.py: current_dir is .../streamlit_app
+    # If in pages/page.py: current_dir is .../streamlit_app/pages
+    
+    if "pages" in current_dir:
+        path = os.path.join(current_dir, "../../data/cleaned_accidents.csv")
+    else:
+        path = os.path.join(current_dir, "../data/cleaned_accidents.csv")
+        
+    return pd.read_csv(path)
+
+df = load_data()
 
 plt.rcParams['figure.facecolor'] = '#0E1117'
 plt.rcParams['axes.facecolor'] = '#0E1117'
@@ -17,6 +36,10 @@ st.markdown("""
     .block-container {
         padding-top: 1rem;
         padding-bottom: 0rem;
+    }
+    /* Hides the default multipage navigation */
+    [data-testid="stSidebarNav"] {
+        display: none;
     }
     /* Photo frame effect for all matplotlib graphs */
     [data-testid="stImage"] img {
@@ -47,7 +70,7 @@ else:
     filtered_df = df[df['state_name'] == selected_state]
 
 st.sidebar.markdown("---")
-st.sidebar.subheader("📌 Quick Stats")
+st.sidebar.subheader("Insights")
 
 # Calculations
 top_time = filtered_df['time_of_day'].mode()[0]
@@ -97,7 +120,6 @@ st.sidebar.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-st.sidebar.markdown("---")
 
 # Dataset preview
 # st.subheader("Dataset Preview")
@@ -157,6 +179,20 @@ with colC:
 # Card 4: Main Severity
 with colD:
     draw_key_card(colD, "Top Severity", common_severity, "#9D4EDD", "⚠️")
+
+st.sidebar.markdown("---")
+st.sidebar.subheader("🚀 Quick Navigation")
+
+if st.sidebar.button("🏠 Home Overview", use_container_width=True):
+    st.switch_page("app.py")
+
+if st.sidebar.button("👤 Driver Analysis", use_container_width=True):
+    # This must match the folder name 'pages' and the filename exactly
+    st.switch_page(r"pages/driver_analysis.py") 
+
+if st.sidebar.button("🌦️ Environmental Factors", use_container_width=True):
+    st.switch_page(r"pages/Environmental_Factors.py")
+    
 # Section title
 st.subheader(f"Analysis for {selected_state}")
 
